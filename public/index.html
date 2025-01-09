@@ -3,10 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Menu App</title>
+    <title>Meal Plan Voting</title>
+    <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-database.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .meal-card {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+        .meal-card button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .meal-card button:hover {
+            background-color: #218838;
+        }
+        .votes {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Family Menu App!</h1>
-    <p>Firebase Hosting is ready!</p>
+    <h1>Vote for Today's Meal</h1>
+    <div id="meal-container"></div>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCnfD4uU4MkLqHMB5aeuJS7yULxgX227SA",
+            authDomain: "familymenu-8c05a.firebaseapp.com",
+            databaseURL: "https://familymenu-8c05a-default-rtdb.firebaseio.com",
+            projectId: "familymenu-8c05a",
+            storageBucket: "familymenu-8c05a.firebasestorage.app",
+            messagingSenderId: "441105128576",
+            appId: "1:441105128576:web:6019777d78883fef6bda65"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Get references
+        const mealContainer = document.getElementById('meal-container');
+
+        // Fetch meals from the database
+        const mealRef = database.ref('meal_plans');
+        mealRef.once('value').then(snapshot => {
+            const meals = snapshot.val();
+            Object.keys(meals).forEach(mealKey => {
+                const meal = meals[mealKey];
+
+                // Create meal card
+                const card = document.createElement('div');
+                card.className = 'meal-card';
+
+                const mealName = document.createElement('h2');
+                mealName.textContent = meal.name;
+                card.appendChild(mealName);
+
+                const ingredients = document.createElement('p');
+                ingredients.textContent = `Ingredients: ${meal.ingredients.join(', ')}`;
+                card.appendChild(ingredients);
+
+                const cost = document.createElement('p');
+                cost.textContent = `Cost: $${meal.cost}`;
+                card.appendChild(cost);
+
+                const voteCount = document.createElement('p');
+                voteCount.className = 'votes';
+                voteCount.textContent = `Votes: ${meal.votes || 0}`;
+                card.appendChild(voteCount);
+
+                const voteButton = document.createElement('button');
+                voteButton.textContent = 'Vote';
+                voteButton.onclick = () => {
+                    const currentVotes = meal.votes || 0;
+                    mealRef.child(mealKey).update({ votes: currentVotes + 1 });
+                    voteCount.textContent = `Votes: ${currentVotes + 1}`;
+                };
+                card.appendChild(voteButton);
+
+                mealContainer.appendChild(card);
+            });
+        });
+    </script>
 </body>
 </html>
